@@ -1,40 +1,45 @@
 # biomeR
 
-biomeR is an R frontend that calls the Julia package [Biome.jl](https://github.com/clechartre/Biome.jl) through
-JuliaCall. The typical workflow is:
+biomeR is an R frontend that calls the Julia package [Biome.jl](https://github.com/clechartre/Biome.jl) through JuliaCall. The typical workflow is:
 
-1. Clone [Biome.jl](https://github.com/clechartre/Biome.jl) (until it is registered)
-2. Initialize Julia + Biome.jl (biome_setup())
-3. Load input rasters in R
-4. Build PFTs (pft()) or edit a BIOME4 PFT list
-5. Run the model (run_biome()), producing a NetCDF output
+1.  Clone [Biome.jl](https://github.com/clechartre/Biome.jl) (until it is registered)
+2.  Initialize Julia + Biome.jl (biome_setup())
+3.  Load input rasters in R
+4.  Build PFTs (pft()) or edit a BIOME4 PFT list
+5.  Run the model (run_biome()), producing a NetCDF output
 
 ## Installation
-### Requirements
-- R (>= 4.1 recommended)
-- Julia (>= 1.10 recommended)
-- A working installation of Biome.jl as long as it is not registered (clone it)
 
-### Installation 
+### Requirements
+
+-   R (\>= 4.1 recommended)
+-   Julia (\>= 1.10 recommended)
+-   A working installation of Biome.jl as long as it is not registered (clone it)
+
+### Installation
 
 Install biomeR
+
 ```{r}
 install.packages("remotes")
-remotes::install_github("clechartre/biomeR")
+remotes::install_github("https://github.com/clechartre/biomeR")
 ```
+
 Install Julia and JuliaCall
+
 ```{r}
 install.packages("JuliaCall")
 ```
+
 If Julia is not installed, get it through JuliaCall
+
 ```{r}
 library(JuliaCall)
 julia_setup(installJulia = TRUE)
 ```
 
-Point biomeR to your Biome.jl checkout (dev mode)
-Biome.jl is not registered yet, so you must have a local checkout of Biome.jl and
-pass its project directory to biome_setup()
+Point biomeR to your Biome.jl checkout (dev mode) Biome.jl is not registered yet, so you must have a local checkout of Biome.jl and pass its project directory to biome_setup()
+
 ```{r}
 library(biomeR)
 
@@ -44,15 +49,13 @@ pkg_check = TRUE
 )
 ```
 
-# Inputs 
+# Inputs
+
 Biome expects climate inputs as rasters (usually monthly/12 bands).
 
-This vignette uses the raster package objects (RasterLayer, RasterBrick,
-RasterStack). If you use ``terra``, convert to raster first or add a terra
-adapter later.
+This vignette uses the raster package objects (RasterLayer, RasterBrick, RasterStack). If you use `terra`, convert to raster first or add a terra adapter later.
 
-We use [CHELSA](https://www.chelsa-climate.org/datasets) climatologies as inputs, 
-but feel free to use anything else, as long as all inputs are on the same format. 
+We use [CHELSA](https://www.chelsa-climate.org/datasets) climatologies as inputs, but feel free to use anything else, as long as all inputs are on the same format.
 
 We recommend generating your soil data using [makesoil](https://github.com/ARVE-Research/makesoil)
 
@@ -82,10 +85,10 @@ rasters <- list(
 
 ## Example 1. BIOME4 and its built-in PFTs
 
-Biome allows you to run the BIOME4 model in its original form, or with modified parametrizations.
-You can edit the PFT list with with ``set_pft_characteristic()``.
+Biome allows you to run the BIOME4 model in its original form, or with modified parametrizations. You can edit the PFT list with with `set_pft_characteristic()`.
 
 Create a BIOME4 list and edit it
+
 ```{r}
 biome <- biome_setup(project_dir = "/path/to/Biome.jl")
 
@@ -98,8 +101,9 @@ biome$api$set_pft_characteristic(PFTList, "BorealEvergreen", "gdd5", c(750.0, 12
 biome$api$set_pft_characteristic(PFTList, "BorealDeciduous", "gdd5", c(1250.0, 1750.0),need_return = "None")
 ```
 
-Run the model 
-````{r}
+Run the model
+
+```{r}
 outfile <- file.path(tempdir(), "biome_output_biome4.nc")
 
 run_biome(
@@ -111,10 +115,12 @@ run_biome(
             coordstring = "alldata",
             biome = biome # Prevents from re-instantiating the Julia install, optional
         )
-````
+```
 
 ## Example 2. Make your own PFTs, run the Base model
+
 You can build a PFT in R using `pft()`
+
 ```{r}
 library(biomeR)
 
@@ -148,8 +154,7 @@ randompft <- pft(
 pft_specs <- list(succulent, randompft)
 ```
 
-Run the model with these toy examples. 
-This will probably look bad.
+Run the model with these toy examples. This will probably look bad.
 
 ```{r}
 outfile <- file.path(tempdir(), "biome_output_base.nc")

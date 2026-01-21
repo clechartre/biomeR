@@ -1,0 +1,23 @@
+Package: biomeR
+Type: Package
+Title: R interface to Biome.jl via JuliaCall
+Version: 0.0.0.9000
+Authors@R: c(
+    person(given = "Capucine", family = "Lechartre",
+           role = c("aut", "cre"),
+           email = "capucine.lechartre@wsl.ch")
+    )
+Description: Run Biome.jl engine from R using JuliaCall. Provides helpers to
+    convert R rasters to Julia Rasters.jl inputs and configure PFT lists.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    JuliaCall,
+    raster
+Suggests:
+    knitr,
+    rmarkdown,
+    remotes
+VignetteBuilder: knitr
