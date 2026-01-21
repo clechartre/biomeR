@@ -1,6 +1,7 @@
 # biomeR
 
-biomeR is an R frontend that calls the Julia package [Biome.jl](https://github.com/clechartre/Biome.jl) through JuliaCall. The typical workflow is:
+biomeR is an R frontend that calls the Julia package [Biome.jl](https://github.com/clechartre/Biome.jl) through [JuliaCall](https://github.com/JuliaInterop/JuliaCall). 
+The workflow is:
 
 1.  Clone [Biome.jl](https://github.com/clechartre/Biome.jl) (until it is registered)
 2.  Initialize Julia + Biome.jl (biome_setup())
@@ -44,7 +45,7 @@ Point biomeR to your Biome.jl checkout (dev mode) Biome.jl is not registered yet
 library(biomeR)
 
 biome <- biome_setup(
-project_dir = "/Users/capucinelechartre/Documents/DocumentsWSLM29592/PhD/BIOME", # Your Biome.jl clone
+project_dir = "/path/to/Biome.jl", # Your Biome.jl clone
 pkg_check = TRUE
 )
 ```
@@ -62,12 +63,12 @@ We recommend generating your soil data using [makesoil](https://github.com/ARVE-
 ```{r}
 library(raster)
 
-temp <- brick("/Users/capucinelechartre/Documents/DocumentsWSLM29592/PhD/BIOME/data_biome4py/generated_data/climatologies/temp_1981-2010.nc", varname = "temp")
-prec <- brick("/Users/capucinelechartre/Documents/DocumentsWSLM29592/PhD/BIOME/data_biome4py/generated_data/climatologies/prec_1981-2010.nc", varname = "prec")
-clt  <- brick("/Users/capucinelechartre/Documents/DocumentsWSLM29592/PhD/BIOME/data_biome4py/generated_data/climatologies/sun_1981-2010.nc",  varname = "sun") 
+temp <- brick("/path/to/temp.nc", varname = "temp")
+prec <- brick("/path/to/prec.nc", varname = "prec")
+clt  <- brick("/path/to/sun.nc",  varname = "sun") 
 
-whc  <- brick("/Users/capucinelechartre/Documents/DocumentsWSLM29592/PhD/BIOME/data_biome4py/generated_data/climatologies/soils_55km.nc", varname = "whc")
-ksat <- brick("/Users/capucinelechartre/Documents/DocumentsWSLM29592/PhD/BIOME/data_biome4py/generated_data/climatologies/soils_55km.nc", varname = "Ksat")
+whc  <- brick("/path/to/soils.nc", varname = "whc")
+ksat <- brick("/path/to/soils.nc", varname = "Ksat")
 
 nlayers(temp)  # should be 12
 
@@ -90,7 +91,7 @@ Biome allows you to run the BIOME4 model in its original form, or with modified 
 Create a BIOME4 list and edit it
 
 ```{r}
-biome <- biome_setup(project_dir = "/Users/capucinelechartre/Documents/DocumentsWSLM29592/PhD/BIOME")
+biome <- biome_setup(project_dir = "/path/to/Biome.jl")
 
 # Load the BIOME4 PFTs
 PFTList <- biome$api$make_biome4_pftclassification()
