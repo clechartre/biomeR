@@ -76,11 +76,7 @@ biome_setup <- function(project_dir = NULL,
   }
   JuliaCall::julia_eval(sprintf('include(raw"%s"); using .BiomeRAPI', api_file))
 
-  # 5) create R handles to call Julia functions
-  env_api <- new.env(parent = emptyenv())
-  env_api$initialized <- TRUE
-  env_api$setup <- function() invisible(TRUE)  # already setup above
-
+  # 5) API: DO NOT use julia_pkg_import() for Main.BiomeRAPI (it's a module, not a package)
   api_functions <- c(
     "make_biome4_pftclassification",
     "set_pft_characteristic",
@@ -89,21 +85,37 @@ biome_setup <- function(project_dir = NULL,
     "make_modelsetup_from_rasterspecs",
     "run_from_r"
   )
-  api <- julia_pkg_import("Main.BiomeRAPI", api_functions)
 
-  # (Optional) expose a small subset of Biome constructors if you want
-  # You can also skip this entirely and keep only $api.
-  env_biome <- new.env(parent = emptyenv())
-  env_biome$initialized <- TRUE
-  env_biome$setup <- function() invisible(TRUE)
+  api <- new.env(parent = emptyenv())
+  api$initialized <- TRUE
+  api$setup <- function() invisible(TRUE)
 
+  for (fname in api_functions) {
+    local({
+      fn <- fname
+      fqn <- paste0("Main.BiomeRAPI.", fn)
+
+      api[[fn]] <- function(...,
+                            need_return = c("R", "Julia", "None"),
+                            show_value = FALSE) {
+        JuliaCall::julia_do.call(
+          func_name = fqn,
+          list(...),
+          need_return = match.arg(need_return),
+          show_value = show_value
+        )
+      }
+    })
+  }
+
+  # 6) Optional: Biome package functions can still use julia_pkg_import
   biome_functions <- c(
     "BaseModel",
     "BIOME4Model",
     "BIOMEDominanceModel",
     "KoppenModel",
-    "WissmannModel", 
-    "ThornthwaiteModel", 
+    "WissmannModel",
+    "ThornthwaiteModel",
     "TrollPfaffenModel"
   )
   biome <- julia_pkg_import("Biome", biome_functions)
