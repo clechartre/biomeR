@@ -44,9 +44,9 @@ Point biomeR to your Biome.jl checkout (dev mode) Biome.jl is not registered yet
 library(biomeR)
 
 biome <- biome_setup(
-project_dir = "/path/to/Biome.jl", # Your Biome.jl clone
-pkg_check = TRUE
-)
+                    project_dir = "/path/to/Biome.jl", # Your Biome.jl clone
+                    pkg_check = TRUE
+                )
 ```
 
 # Inputs
