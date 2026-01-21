@@ -23,7 +23,8 @@ Install biomeR
 
 ```{r}
 install.packages("remotes")
-remotes::install_github("https://github.com/clechartre/biomeR")
+install.packages("Rtools")
+remotes::install_github("/clechartre/biomeR")
 ```
 
 Install Julia and JuliaCall
