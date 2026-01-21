@@ -18,16 +18,16 @@ JuliaCall. The typical workflow is:
 ### Installation 
 
 Install biomeR
-```r
+```{r}
 install.packages("remotes")
 remotes::install_github("clechartre/biomeR")
 ```
 Install Julia and JuliaCall
-```r
+```{r}
 install.packages("JuliaCall")
 ```
 If Julia is not installed, get it through JuliaCall
-```r
+```{r}
 library(JuliaCall)
 julia_setup(installJulia = TRUE)
 ```
@@ -35,7 +35,7 @@ julia_setup(installJulia = TRUE)
 Point biomeR to your Biome.jl checkout (dev mode)
 Biome.jl is not registered yet, so you must have a local checkout of Biome.jl and
 pass its project directory to biome_setup()
-```r
+```{r}
 library(biomeR)
 
 biome <- biome_setup(
@@ -56,7 +56,7 @@ but feel free to use anything else, as long as all inputs are on the same format
 
 We recommend generating your soil data using [makesoil](https://github.com/ARVE-Research/makesoil)
 
-```r
+```{r}
 library(raster)
 
 temp <- brick("/path/to/temp.nc", varname = "temp")
@@ -86,7 +86,7 @@ Biome allows you to run the BIOME4 model in its original form, or with modified 
 You can edit the PFT list with with ``set_pft_characteristic()``.
 
 Create a BIOME4 list and edit it
-```r
+```{r}
 biome <- biome_setup(project_dir = "/path/to/Biome.jl")
 
 # Load the BIOME4 PFTs
@@ -99,7 +99,7 @@ biome$api$set_pft_characteristic(PFTList, "BorealDeciduous", "gdd5", c(1250.0, 1
 ```
 
 Run the model 
-````r
+````{r}
 outfile <- file.path(tempdir(), "biome_output_biome4.nc")
 
 run_biome(
@@ -115,7 +115,7 @@ run_biome(
 
 ## Example 2. Make your own PFTs, run the Base model
 You can build a PFT in R using `pft()`
-```r
+```{r}
 library(biomeR)
 
 succulent <- pft(
@@ -151,7 +151,7 @@ pft_specs <- list(succulent, randompft)
 Run the model with these toy examples. 
 This will probably look bad.
 
-```r
+```{r}
 outfile <- file.path(tempdir(), "biome_output_base.nc")
 
 run_biome(
