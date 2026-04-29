@@ -79,8 +79,13 @@ biome_setup <- function(project_dir = NULL,
   # 5) API: DO NOT use julia_pkg_import() for Main.BiomeRAPI (it's a module, not a package)
   api_functions <- c(
     "make_biome4_pftclassification",
+    "make_pftclassification_from_rlist",
     "set_pft_characteristic",
+    "get_pft_names",
+    "get_pft_constraint",
+    "make_bounds",
     "apply_pft_edits_bang",
+    "free_handle",
     "raster_from_spec",
     "make_modelsetup_from_rasterspecs",
     "run_from_r"

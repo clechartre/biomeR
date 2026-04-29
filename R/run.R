@@ -1,81 +1,70 @@
 # R/run.R
 
+#' Define a spatial bounding box for model execution
+#'
+#' Creates a spatial bounds object on the Julia side that can be passed to
+#' \code{run_biome()} to restrict execution to a geographic subset.
+#'
+#' @param lon_min Minimum longitude.
+#' @param lon_max Maximum longitude.
+#' @param lat_min Minimum latitude.
+#' @param lat_max Maximum latitude.
+#' @return An integer handle referencing the Julia-side bounds tuple.
+#' @export
+bbox <- function(lon_min, lon_max, lat_min, lat_max) {
+  julia_call("BiomeRAPI.make_bounds",
+             as.double(lon_min), as.double(lon_max),
+             as.double(lat_min), as.double(lat_max))
+}
+
 #' Run Biome.jl from R
 #'
-#' High-level wrapper that:
-#'  1) ensures Julia + BiomeRAPI are initialized (via biome_setup)
-#'  2) converts R rasters to array "specs"
-#'  3) calls BiomeRAPI.run_from_r() in Julia
-#'
 #' @param rasters Named list of Raster* objects (from the raster package).
-#'   Required names: at least temp, prec. Common: clt, whc, ksat.
-#'   Examples:
-#'     list(temp=temp_brick, prec=prec_brick, clt=clt_brick, whc=whc_layer, ksat=ksat_layer)
-#' @param model Julia model constructor name as string. e.g. "BaseModel", "BIOME4Model".
+#' @param model Julia model constructor name, e.g. "BaseModel" or "BIOME4Model".
 #' @param co2 Numeric CO2 concentration.
-#' @param pft_specs Optional: R list of PFT specs created with pft(), e.g. list(pft(...), pft(...)).
-#' @param pftlist Optional: a Julia PFTClassification object (e.g. from make_biome4_pftclassification()).
-#'   If provided, it takes precedence over pft_specs.
-#' @param outfile Output NetCDF path.
-#' @param coordstring Coordinate bounding box string or "alldata".
-#' @param fill_value Fill value used for NA -> numeric.
-#' @param biome Optional: result from biome_setup(). If NULL, will call biome_setup().
-#' @param project_dir Path to the Biome.jl project directory (needed if biome is NULL).
-#' @param ... Passed through to biome_setup() (e.g. julia_bin, installJulia, pkg_check).
+#' @param pft_specs Optional: R list of PFT specs created with \code{pft()}.
+#' @param pftlist Optional: integer handle from \code{make_biome4_pftlist()}.
+#'   Takes precedence over \code{pft_specs} if provided.
+#' @param outfile Output NetCDF file path.
+#' @param bounds Optional: integer handle from \code{bbox()} to spatially subset the run.
+#' @param fill_value Fill value used for NA replacement. Default -9999.
 #'
-#' @return outfile (invisibly), as a string.
+#' @return \code{outfile} invisibly.
 #' @export
 run_biome <- function(rasters,
-                      model = "BaseModel",
-                      co2 = 378.0,
-                      pft_specs = NULL,
-                      pftlist = NULL,
-                      outfile = "out.nc",
-                      coordstring = "alldata",
-                      fill_value = -9999.0,
-                      biome = NULL,
-                      project_dir = NULL,
-                      ...) {
+                      model      = "BaseModel",
+                      co2        = 378.0,
+                      pft_specs  = NULL,
+                      pftlist    = NULL,
+                      outfile    = "out.nc",
+                      bounds     = NULL,
+                      fill_value = -9999.0) {
 
   # --- basic checks ---
-  if (is.null(rasters) || !is.list(rasters) || is.null(names(rasters))) {
-    stop("`rasters` must be a *named* list, e.g. list(temp=..., prec=..., clt=..., whc=..., ksat=...).")
-  }
+  if (is.null(rasters) || !is.list(rasters) || is.null(names(rasters)))
+    stop("`rasters` must be a named list, e.g. list(temp=..., prec=..., clt=..., whc=..., ksat=...).")
   if (!("temp" %in% names(rasters))) stop("`rasters` must include a `temp` raster.")
   if (!("prec" %in% names(rasters))) stop("`rasters` must include a `prec` raster.")
 
-  # --- ensure Julia/Biome is initialized ---
-  if (is.null(biome)) {
-    if (is.null(project_dir)) {
-      stop("Provide either `biome` (result of biome_setup()) or `project_dir` (Biome.jl project path).")
-    }
-    biome <- biome_setup(project_dir = project_dir, ...)
-  }
-
-  # --- convert R rasters -> specs expected by Julia ---
+  # --- convert R rasters to array specs ---
   rasters_spec <- lapply(rasters, r_to_spec, fill_value = fill_value)
 
-  # --- choose PFT input mode ---
-  # If pftlist is provided, pass it through as-is.
-  # Else pass pft_specs (R list of pft() objects) or NULL.
+  # --- build args ---
   args <- list(
-    model = model,
-    co2 = co2,
-    rasters = rasters_spec,
-    coordstring = coordstring,
-    outfile = outfile,
-    fill_value = fill_value
+    model         = model,
+    co2           = co2,
+    rasters       = rasters_spec,
+    bounds_handle = if (!is.null(bounds)) as.integer(bounds) else NULL,
+    outfile       = outfile,
+    fill_value    = fill_value
   )
 
   if (!is.null(pftlist)) {
-    args$pftlist <- pftlist
-  } else {
-    args$pft_specs <- pft_specs
+    args$pft_handle <- as.integer(pftlist)
+  } else if (!is.null(pft_specs)) {
+    args$pft_specs <- as_biome_pft_list(pft_specs)
   }
 
   # --- call Julia ---
-  # Julia_function wrapper uses need_return. We want the outfile string back.
-  res <- do.call(biome$api$run_from_r, c(args, list(need_return = "R")))
-
-  invisible(res)
+  invisible(do.call(julia_call, c(list("BiomeRAPI.run_from_r"), args)))
 }
